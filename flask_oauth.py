@@ -170,6 +170,8 @@ class OAuthRemoteApp(object):
     :param access_token_method: the HTTP method that should be used
                                 for the access_token_url.  Defaults
                                 to ``'GET'``.
+    :param additional_certs: path to a ``pem`` file containing additional SSL 
+                             certificates to use for ``HTTPS`` connections.
     """
 
     def __init__(self, oauth, name, base_url,
@@ -370,12 +372,10 @@ class OAuthRemoteApp(object):
         function.
         """
         client = self.make_client()
-        remote_args = {
-            'oauth_verifier': request.args['oauth_verifier']
-        }
-        remote_args.update(self.access_token_params)
-        url = add_query(self.expand_url(self.access_token_url), remote_args)
-        resp, content = client.request(url, self.access_token_method)
+        resp, content = client.request('%s?oauth_verifier=%s' % (
+            self.expand_url(self.access_token_url),
+            request.args['oauth_verifier']
+        ), self.access_token_method)
         data = parse_response(resp, content)
         if not self.status_okay(resp):
             raise OAuthException('Invalid response from ' + self.name,
